@@ -5,7 +5,7 @@ A collection of handy bash scripts that I use from time to time.
 Uses yt-dlp as a downloader backend, with additional flags for higher audio quality when converting to mp4 via ffmpeg (named 'VideoConvertor' in yt-dlp).
 If yt-dlp is not already present it can be installed with:
 ```bash
-sudo apt update && sudo apt install yt-dlp -y
+python3 -m pip install -U yt-dlp
 ```
 Usage:
 ```bash
