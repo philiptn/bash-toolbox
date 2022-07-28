@@ -1,5 +1,5 @@
 # bash-toolbox
-A collection of handy bash scripts I use from time to time.
+A collection of handy bash scripts that I use from time to time.
 
 ## yt-dlp_mp4
 Uses yt-dlp as a downloader backend, with additional flags for higher audio quality when converting to mp4 via ffmpeg (named 'VideoConvertor' in yt-dlp).
