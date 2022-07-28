@@ -9,5 +9,5 @@ python3 -m pip install -U yt-dlp
 ```
 Usage:
 ```bash
-yt-dlp_mp4 <Video URL>
+./yt-dlp_mp4 <Video URL>
 ```
