@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+yt-dlp --recode-video mp4 --postprocessor-args 'VideoConvertor:-aq 6' --output '%(title)s.%(ext)s' $1
