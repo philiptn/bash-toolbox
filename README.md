@@ -13,7 +13,7 @@ Usage:
 ```
 
 ## yt-dlp_quickview
-Downloads video to tmp using yt-dlp and automatically opens it in a media player. Deletes the file after media player is closed. Paths and variables may be changed before running.
+Downloads video to tmp using yt-dlp and automatically opens it in a media player. Deletes the file automatically when media player is closed. Paths and variables may be changed before running.
 
 Usage:
 ```bash
