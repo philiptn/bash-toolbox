@@ -9,10 +9,7 @@ STATE=1
 rm -rf .tmp
 mkdir .tmp
 
-yt-dlp --output '.tmp/video.%(ext)s' $1
-
-file=$(ls .tmp/*)
-$MPLAYER "$file"
+yt-dlp --output - $1 | $MPLAYER --stdin
 
 # While media player is running, check if program is still running by updating STATE
 until [ "$STATE" = "0" ]
