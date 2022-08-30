@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Media player path, change to VLC if IINA is not installed
+MPLAYER=/Applications/IINA.app/Contents/MacOS/iina-cli
+PROCESS=IINA
+# STATE=1 means that one or more process instances are running
+STATE=1
+
+rm -rf .tmp
+mkdir .tmp
+
+yt-dlp --output '.tmp/video.%(ext)s' $1
+
+file=$(ls .tmp/*)
+$MPLAYER "$file"
+
+# While media player is running, check if program is still running by updating STATE
+until [ "$STATE" = "0" ]
+do
+   STATE=$(ps aux | grep -v grep | grep -ci $PROCESS)
+   sleep 0.1
+done
+
+rm -rf ./tmp
