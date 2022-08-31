@@ -5,7 +5,7 @@ If yt-dlp is not currently installed it can be installed with:
 ```bash
 python3 -m pip install -U yt-dlp
 ```
-FFmpeg is also required for converting between formats and can be installed using:
+FFmpeg is required for yt-dlp to work properly and can be installed using:
 
 #### Linux
 ```bash
