@@ -23,7 +23,7 @@ Uses yt-dlp as a downloader backend, with additional flags for higher audio qual
 ```
 
 ## yt-dlp_discord (Work in progress)
-Downloads video/audio using yt-dlp while also converting the input to a desired filesize (under 8MB default). Flag `-nitro` can be passed to increase target size to 40MB.
+Downloads video/audio using yt-dlp while also converting the input to a desired filesize (under 8MB default). Flag `-n` (Nitro) can be passed to increase target size to 40MB and target resolution to 1080p max.
 
 Requires the installation of ffmpeg, which can be installed using:
 ##### Linux
