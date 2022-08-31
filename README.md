@@ -5,6 +5,16 @@ If yt-dlp is not currently installed it can be installed with:
 ```bash
 python3 -m pip install -U yt-dlp
 ```
+FFmpeg is also required for converting between formats and can be installed using:
+
+#### Linux
+```bash
+sudo apt install ffmpeg -y
+```
+#### macOS
+```
+brew install ffmpeg
+```
 
 ## yt-dlp_mp3
 Uses yt-dlp to download audio stream only, then converts to a 320kbps MP3 file. Supports multiple input URLs.
