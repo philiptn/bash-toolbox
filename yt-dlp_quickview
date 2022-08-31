@@ -6,9 +6,6 @@ PROCESS=IINA
 # STATE=1 means that one or more process instances are running
 STATE=1
 
-rm -rf .tmp
-mkdir .tmp
-
 yt-dlp --output - $1 | $MPLAYER --stdin
 
 # While media player is running, check if program is still running by updating STATE
@@ -17,5 +14,3 @@ do
    STATE=$(ps aux | grep -v grep | grep -ci $PROCESS)
    sleep 0.1
 done
-
-rm -rf ./tmp
