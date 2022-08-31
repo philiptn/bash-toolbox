@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-max_res="res:720" # 720p max resolution
-target_size_mb=8 # 8MB target size
+max_res="res:480" # 480p max resolution
+target_size_mb=7 # 8MB target size, but 1MB headroom
+target_audio_bitrate=128 # 128kbps target audio bitrate
 audio_only=0
 
 # Thanks to 'Chris Pearson' (Aug 15, 2020) for getopts example
@@ -13,8 +14,9 @@ do
     then
         case $option
         in
-            n) max_res="res:1080" # 1080p max resolution
+            n) max_res="res:720" # 720p max resolution
 	       target_size_mb=40  # 40MB target size
+	       target_audio_bitrate=320 # 320kbps target audio bitrate
 	       ;;
 	    a) audio_only=1
 	       ;;
@@ -33,11 +35,11 @@ target_size=$(($target_size_mb * 1000 * 1000 * 8)) # target size in bits
 duration_round_up=$((${duration%.*} + 1))
 
 total_bitrate=$(($target_size / $duration_round_up))
-audio_bitrate=$((128 * 1000)) # 128k bit rate
+audio_bitrate=$(($target_audio_bitrate * 1000))
 video_bitrate=$(($total_bitrate - $audio_bitrate))
 
 postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate}"
-yt_dlp_params="--recode-video mp4 -S ${max_res}"
+yt_dlp_params="--recode-video mp4 -S ${max_res},ext:webm"
 alt_params="--format bestaudio --extract-audio --audio-format mp3 --audio-quality $(($total_bitrate / 1000))k"
 
 if [ "$audio_only" = "1" ]
