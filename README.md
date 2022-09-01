@@ -36,7 +36,7 @@ Downloads video/audio using yt-dlp while also converting the input to a desired 
 
 #### Usage:
 ```bash
-./yt_dlp_discord [OPTIONS] <Video/Audio URL>
+./yt-dlp_discord [OPTIONS] <Video/Audio URL>
 ```
 
 ## yt-dlp_quickview
@@ -44,5 +44,5 @@ Downloads video to tmp using yt-dlp and automatically opens it in a media player
 
 #### Usage:
 ```bash
-./yt_dlp_quickview <Video URL>
+./yt-dlp_quickview <Video URL>
 ```
