@@ -55,4 +55,4 @@ then
    yt_dlp_params=$alt_params
 fi
 
-yt-dlp -v ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
+yt-dlp ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
