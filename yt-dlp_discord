@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 max_res="res:480" # 480p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=128 # 128kbps target audio bitrate
@@ -17,7 +15,7 @@ do
         case $option
         in
             n) max_res="res:720" # 720p max resolution
-	       target_size_mb=40  # 40MB target size
+	       target_size_mb=38  # 40MB target size, but 2MB headroom
 	       target_audio_bitrate=320 # 320kbps target audio bitrate
 	       ;;
             a) audio_only=1
@@ -57,5 +55,4 @@ then
    yt_dlp_params=$alt_params
 fi
 
-# Main program
 yt-dlp -v ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
