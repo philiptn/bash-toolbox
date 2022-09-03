@@ -4,13 +4,14 @@ max_res="res:480" # 480p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=128 # 128kbps target audio bitrate
 audio_only=0
+verbose="--no-warnings"
 
 # Thanks to 'Chris Pearson' (Aug 15, 2020) for getopts example
 # https://stackoverflow.com/a/40190976
 
 while [ $OPTIND -le "$#" ]
 do
-    if getopts na option
+    if getopts nav option
     then
         case $option
         in
@@ -20,6 +21,8 @@ do
 	       ;;
             a) audio_only=1
 	       ;;
+	    v) verbose="--verbose"
+               ;;
         esac
     else
         script_args+=("${!OPTIND}")
@@ -55,4 +58,11 @@ then
    yt_dlp_params=$alt_params
 fi
 
-yt-dlp ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
+# If calculated video bitrate is still negative, disable video bitrate calculation
+if [[ ! $video_bitrate -gt 0 ]]
+then
+   audio_bitrate=$((96 * 1000))
+   postprocessor_args_str="VideoConvertor:-bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate}"
+fi
+
+yt-dlp ${verbose} ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
