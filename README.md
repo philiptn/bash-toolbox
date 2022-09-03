@@ -17,7 +17,7 @@ brew install yt-dlp ffmpeg
 ```
 
 ## yt-dlp_mp3
-Uses yt-dlp to download audio stream only, then converts to a 320kbps MP3 file. Supports multiple input URLs.
+Uses yt-dlp to download audio stream only, then converts to a 320kbps MP3 file.
 
 #### Usage:
 ```bash
@@ -29,7 +29,7 @@ Uses yt-dlp as a downloader backend, with additional flags for higher audio qual
 
 #### Usage:
 ```bash
-./yt-dlp_mp4 <Video URL>
+./yt-dlp_mp4 <URL1> <URL2> ...
 ```
 
 ## yt-dlp_discord
@@ -37,7 +37,7 @@ Downloads video/audio using yt-dlp while also converting the input to a desired 
 
 #### Usage:
 ```bash
-./yt-dlp_discord [OPTIONS] <Video/Audio URL>
+./yt-dlp_discord [OPTIONS] <URL1> <URL2> ...
 ```
 
 ## yt-dlp_quickview
