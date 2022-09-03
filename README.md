@@ -45,5 +45,5 @@ Downloads video to tmp using yt-dlp and automatically opens it in a media player
 
 #### Usage:
 ```bash
-./yt-dlp_quickview <Video URL>
+./yt-dlp_quickview <URL>
 ```
