@@ -1,18 +1,19 @@
 # bash-toolbox
 A collection of handy bash scripts that I use from time to time.
 
+#### Linux
 If yt-dlp is not currently installed it can be installed with:
 ```bash
 python3 -m pip install -U yt-dlp
 ```
 FFmpeg is required for yt-dlp to work properly and can be installed using:
-#### Linux
 ```bash
 sudo apt install ffmpeg -y
 ```
 #### macOS
+If you are running macOS, both yt-dlp and ffmpeg can be installed using brew:
 ```
-brew install ffmpeg
+brew install yt-dlp ffmpeg
 ```
 
 ## yt-dlp_mp3
