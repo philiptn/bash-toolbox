@@ -84,3 +84,9 @@ then
 fi
 
 yt-dlp ${verbose} ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
+
+# If running script under WSL (Windows), automatically open explorer in current directory
+if $(uname -a | grep -q 'microsoft')
+then
+   explorer.exe .
+fi
