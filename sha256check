@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+if [[ $# -eq 0 ]]
+then
+    echo "No arguments provided"
+    exit 1
+fi
+
+sha256sum "$1"
+
+read -e -p "sha256sum file: " -i "$1" sumfile
+
+sha256sum --check $sumfile --ignore-missing
