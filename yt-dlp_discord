@@ -2,7 +2,7 @@
 
 max_res="res:480" # 480p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
-target_audio_bitrate=128 # 128kbps target audio bitrate
+target_audio_bitrate=96 # 128kbps target audio bitrate
 audio_only=0
 verbose="--no-warnings"
 
@@ -15,12 +15,11 @@ do
     then
         case $option
         in
-            n) max_res="res:720" # 720p max resolution
-	       target_size_mb=38  # 40MB target size, but 2MB headroom
-	       target_audio_bitrate=320 # 320kbps target audio bitrate
-	       ;;
+            n) target_size_mb=38  # 40MB target size, but 2MB headroom
+               target_audio_bitrate=256 # 256kbps target audio bitrate
+               ;;
             a) audio_only=1
-	       ;;
+               ;;
 	    v) verbose="--verbose"
                ;;
         esac
@@ -41,11 +40,10 @@ total_bitrate=$(($target_size / $duration_round_up))
 audio_bitrate=$(($target_audio_bitrate * 1000))
 video_bitrate=$(($total_bitrate - $audio_bitrate))
 
-# If calculated video bitrate is negative, reduce audio bitrate
+# If calculated video bitrate is negative, make audio mono
 if [[ ! $video_bitrate -gt 0 ]]
 then
-   audio_bitrate=$((96 * 1000))
-   video_bitrate=$(($total_bitrate - $audio_bitrate))
+   postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate} -ac 1"
 fi
 
 postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate}"
@@ -71,6 +69,8 @@ fi
 if [[ "$verbose" = "--verbose" ]]
 then
    echo "Duration (s): $duration_round_up"
+   echo "Target size (bits): $target_size"
+   echo "Duration round-up (s) $duration_round_up"
    echo "Total bitrate (bits): $total_bitrate"
    echo "Audio bitrate (bits): $audio_bitrate"
    echo "Video bitrate (bits): $video_bitrate"
