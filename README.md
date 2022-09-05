@@ -33,7 +33,7 @@ Uses yt-dlp as a downloader backend, with additional flags for higher audio qual
 ```
 
 ## yt-dlp_discord
-Downloads video/audio using yt-dlp while also converting the input to a desired filesize (under 8MB default). Flag `-n` (Nitro) can be passed to increase target size to 40MB and target resolution to 720p. Flag `-a` fetches audio stream only and converts the output to MP3 with dynamic bitrate based on desired output filesize. Flag `-v` enables verbose mode.
+Downloads video/audio using yt-dlp while also converting the input to a desired filesize (under 8MB default). Flag `-n` (Nitro Classic) can be passed to increase target size to 40MB. Flag `-a` fetches audio stream only and converts the output to MP3 with dynamic bitrate based on desired output filesize. Flag `-v` enables verbose mode.
 
 #### Usage:
 ```bash
