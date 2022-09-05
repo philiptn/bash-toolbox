@@ -47,3 +47,11 @@ Downloads video to tmp using yt-dlp and automatically opens it in a media player
 ```bash
 ./yt-dlp_quickview <URL>
 ```
+
+## sha256check
+Verifies SHA-256 checksums of files using `sha256sum`. Allows the user to specify a separate checksum file if needed.
+
+#### Usage:
+```bash
+./sha256check <FILE>
+```
