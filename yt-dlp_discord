@@ -62,9 +62,9 @@ fi
 if [[ ! $video_bitrate -gt 0 ]]
 then
    audio_bitrate=$((10 * 1000)) # 10kbps audio bitrate
-   video_bitrate=$(($total_bitrate - $audio_bitrate - 10 * 1000)) # 10kbps bitrate overhead
-   # Mono audio, 8kHz (phone audio) sample rate and max res of 144p
-   postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf scale=-2:144 -b:a ${audio_bitrate} -ar 8000 -ac 1"
+   video_bitrate=$(($total_bitrate - $audio_bitrate - 5 * 1000)) # 5kbps bitrate overhead
+   # Mono audio, 8kHz (phone audio) sample rate and max res of 240p
+   postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf scale=-2:240 -b:a ${audio_bitrate} -ar 8000 -ac 1"
 fi
 
 # Print debug info if verbose is enabled
