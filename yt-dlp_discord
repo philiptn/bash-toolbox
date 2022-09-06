@@ -50,6 +50,13 @@ total_bitrate=$(($target_size / $duration_round_up))
 audio_bitrate=$(($target_audio_bitrate * 1000))
 video_bitrate=$(($total_bitrate - $audio_bitrate))
 
+# If calculated video bitrate is less than 1kbps, throw error
+if [[ ! $video_bitrate -gt 1000 ]]
+then
+   echo "ERROR: Video is too long to be compressed."
+   exit 1
+fi
+
 yt_dlp_params="-S ${max_res}"
 alt_params="--format bestaudio --extract-audio --audio-format mp3 --audio-quality $(($total_bitrate / 1000))k"
 
@@ -77,6 +84,16 @@ if [[ "$crop" = "1" ]]
 then
    echo "[FFmpeg] Auto-cropping enabled."
    cropvalue=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   
+   if [[ "$cropvalue" = "" ]]
+   then
+      cropvalue=$(ffmpeg -i ".tmp/$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   fi
+fi
+
+if [[ "$audio_only" = "1" ]]
+then
+   mv ".tmp/$file" "./$file"
 fi
 
 # If video duration is not available (Instagram Reels), get video length from ffprobe instead
