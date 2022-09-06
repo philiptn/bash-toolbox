@@ -41,7 +41,7 @@ Downloads video/audio using yt-dlp while also converting the input to a desired 
 ```
 
 ## yt-dlp_quickview
-Downloads video to tmp using yt-dlp and automatically opens it in a media player. Deletes the file automatically when media player is closed. Paths and variables may be changed before running.
+Downloads video using yt-dlp and automatically starts playing in a media player while downloading. Paths and variables may be changed before running.
 
 #### Usage:
 ```bash
