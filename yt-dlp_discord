@@ -76,8 +76,8 @@ then
    echo "Video bitrate (bits): $video_bitrate"
 fi
 
-# If calculated video bitrate is still negative, throw error
-if [[ ! $video_bitrate -gt 0 ]]
+# If calculated video bitrate is less than 1kbps, throw error
+if [[ ! $video_bitrate -gt 1000 ]]
 then
    echo "ERROR: Video is too long to be compressed."
    exit 1
