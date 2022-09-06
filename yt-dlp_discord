@@ -29,7 +29,7 @@ do
     fi
 done
 
-# Thanks to 'tobek' for duration and bitrate calculation examples
+# Thanks to 'tobek' (Jul 14, 2020) for duration and bitrate calculation examples
 # https://unix.stackexchange.com/a/598360
 
 duration=$(yt-dlp --no-warnings --print duration ${script_args[@]})
