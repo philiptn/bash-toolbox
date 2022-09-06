@@ -5,8 +5,13 @@ target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=96 # 128kbps target audio bitrate
 audio_only=0
 crop=0
+cropvalue="crop=iw:ih:(in_w-out_w)/2:(in_h-out_h)/2"
 verbose="--no-warnings"
-ffmpeg_loglevel="-loglevel quiet"
+ffmpeg_enable=1
+ffmpeg_loglevel="-loglevel quiet -stats"
+
+# Delete .tmp folder in case any previous downloads failed
+rm -rf .tmp
 
 # Thanks to 'Chris Pearson' (Aug 15, 2020) for getopts example
 # https://stackoverflow.com/a/40190976
@@ -37,28 +42,61 @@ done
 # Thanks to 'tobek' (Jul 14, 2020) for duration and bitrate calculation examples
 # https://unix.stackexchange.com/a/598360
 
-duration=$(yt-dlp --no-warnings --print duration ${script_args[@]})
 target_size=$(($target_size_mb * 1000 * 1000 * 8)) # target size in bits
+duration=$(yt-dlp --no-warnings --print duration ${script_args[@]})
 duration_round_up=$((${duration%.*} + 1))
 
 total_bitrate=$(($target_size / $duration_round_up))
 audio_bitrate=$(($target_audio_bitrate * 1000))
 video_bitrate=$(($total_bitrate - $audio_bitrate))
 
-# If calculated video bitrate is negative, make audio mono
-if [[ ! $video_bitrate -gt 0 ]]
-then
-   postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate} -ac 1"
-fi
-
-postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -b:a ${audio_bitrate}"
-yt_dlp_params="--recode-video mp4 -S ${max_res}"
+yt_dlp_params="-S ${max_res}"
 alt_params="--format bestaudio --extract-audio --audio-format mp3 --audio-quality $(($total_bitrate / 1000))k"
 
 if [ "$audio_only" = "1" ]
 then 
-   postprocessor_args_str="ffmpeg:"
+   ffmpeg_enable=0
    yt_dlp_params=$alt_params
+fi
+
+################
+### DOWNLOAD ###
+################
+
+mkdir .tmp
+yt-dlp ${verbose} ${yt_dlp_params} --output '.tmp/%(title)s.%(ext)s' ${script_args[@]}
+
+####################
+### CALCULATIONS ###
+####################
+
+file=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.}"' {} ';')
+file_no_ext=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.*}"' {} ';')
+
+if [[ "$crop" = "1" ]]
+then
+   echo "[FFmpeg] Auto-cropping enabled."
+   cropvalue=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+fi
+
+# If video duration is not available (Instagram Reels), get video length from ffprobe instead
+if [[ "$duration" = "NA" ]]
+then
+   file=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.}"' {} ';')
+   duration=$(ffmpeg -i ".tmp/$file" 2>&1 | grep Duration | awk '{print $2}' | tr -d , | awk -F: '{ print ($1 * 3600) + ($2 * 60) + ($3)}')
+   duration_round_up=$((${duration%.*} + 1))
+fi
+
+total_bitrate=$(($target_size / $duration_round_up))
+audio_bitrate=$(($target_audio_bitrate * 1000))
+video_bitrate=$(($total_bitrate - $audio_bitrate))
+
+postprocessor_args_str="-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf "$cropvalue" -b:a ${audio_bitrate}"
+
+# If calculated video bitrate is negative, make audio mono
+if [[ ! $video_bitrate -gt 0 ]]
+then
+   postprocessor_args_str="-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf "$cropvalue" -b:a ${audio_bitrate} -ac 1"
 fi
 
 # If calculated video bitrate is still negative, set video and audio to absolute lowest values
@@ -67,18 +105,7 @@ then
    audio_bitrate=$((10 * 1000)) # 10kbps audio bitrate
    video_bitrate=$(($total_bitrate - $audio_bitrate - 5 * 1000)) # 5kbps bitrate overhead
    # Mono audio, 8kHz (phone audio) sample rate and max res of 240p
-   postprocessor_args_str="VideoConvertor:-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf scale=-2:240 -b:a ${audio_bitrate} -ar 8000 -ac 1"
-fi
-
-# Print debug info if verbose is enabled
-if [[ "$verbose" = "--verbose" ]]
-then
-   echo "Duration (s): $duration_round_up"
-   echo "Target size (bits): $target_size"
-   echo "Duration round-up (s) $duration_round_up"
-   echo "Total bitrate (bits): $total_bitrate"
-   echo "Audio bitrate (bits): $audio_bitrate"
-   echo "Video bitrate (bits): $video_bitrate"
+   postprocessor_args_str="-b:v ${video_bitrate} -maxrate:v ${video_bitrate} -bufsize:v $((${target_size} / 20)) -vf "scale=-2:240, $cropvalue" -b:a ${audio_bitrate} -ar 8000 -ac 1"
 fi
 
 # If calculated video bitrate is less than 1kbps, throw error
@@ -88,14 +115,25 @@ then
    exit 1
 fi
 
-yt-dlp ${verbose} ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
-
-if [ "$crop" = "1" ]
+# Print debug info if verbose is enabled
+if [[ "$verbose" = "--verbose" ]]
 then
-   file=$(find . -name "*.mp4" -execdir echo '{}' ';')
-   cropvalue=$(ffmpeg -ss 5 -i "$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   echo "[FFmpeg] Auto-cropping video..."
-   ffmpeg $ffmpeg_loglevel -i "$file" -vf $cropvalue -c:a copy "cropped_$file" && rm "$file" && mv "cropped_$file" "$file"
+   echo "Duration (s): $duration"
+   echo "Target size (bits): $target_size"
+   echo "Duration round-up (s) $duration_round_up"
+   echo "Total bitrate (bits): $total_bitrate"
+   echo "Audio bitrate (bits): $audio_bitrate"
+   echo "Video bitrate (bits): $video_bitrate"
+fi
+
+##############
+### FFMPEG ###
+##############
+
+if [[ "$ffmpeg_enable" = "1" ]]
+then
+   echo "[FFmpeg] Converting video:"
+   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" && rm ".tmp/$file" && rm -rf .tmp
 fi
 
 # If running script under WSL (Windows), automatically open explorer in current directory
