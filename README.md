@@ -8,7 +8,7 @@ python3 -m pip install -U yt-dlp
 ```
 FFmpeg is required for yt-dlp to work properly and can be installed using:
 ```bash
-sudo apt install ffmpeg -y
+sudo apt update && sudo apt install ffmpeg -y
 ```
 ### macOS
 If you are running macOS, both yt-dlp and ffmpeg can be installed using brew:
