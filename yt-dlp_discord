@@ -70,8 +70,8 @@ yt-dlp ${verbose} ${yt_dlp_params} --output '.tmp/%(title)s.%(ext)s' ${script_ar
 ### CALCULATIONS ###
 ####################
 
-file=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.}"' {} ';')
-file_no_ext=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.*}"' {} ';')
+file=$(find .tmp -type f | cut -d "/" -f 2)
+file_no_ext=$(find .tmp -type f | cut -d "/" -f 2 | cut -d "." -f 1)
 
 if [[ "$crop" = "1" ]]
 then
@@ -132,7 +132,7 @@ fi
 
 if [[ "$ffmpeg_enable" = "1" ]]
 then
-   echo "[FFmpeg] Converting video:"
+   echo "[FFmpeg] Converting video..."
    ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" && rm ".tmp/$file" && rm -rf .tmp
 fi
 
