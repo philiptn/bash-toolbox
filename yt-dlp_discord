@@ -4,14 +4,16 @@ max_res="res:480" # 480p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=96 # 128kbps target audio bitrate
 audio_only=0
+crop=0
 verbose="--no-warnings"
+ffmpeg_loglevel="-loglevel quiet"
 
 # Thanks to 'Chris Pearson' (Aug 15, 2020) for getopts example
 # https://stackoverflow.com/a/40190976
 
 while [ $OPTIND -le "$#" ]
 do
-    if getopts nav option
+    if getopts navc option
     then
         case $option
         in
@@ -21,6 +23,9 @@ do
             a) audio_only=1
                ;;
 	    v) verbose="--verbose"
+               ffmpeg_loglevel="-loglevel info"
+               ;;
+	    c) crop=1
                ;;
         esac
     else
@@ -85,8 +90,17 @@ fi
 
 yt-dlp ${verbose} ${yt_dlp_params} --postprocessor-args "${postprocessor_args_str}" --output '%(title)s.%(ext)s' ${script_args[@]}
 
+if [ "$crop" = "1" ]
+then
+   file=$(find . -name "*.mp4" -execdir echo '{}' ';')
+   cropvalue=$(ffmpeg -ss 5 -i "$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   echo "[FFmpeg] Auto-cropping video..."
+   ffmpeg $ffmpeg_loglevel -i "$file" -vf $cropvalue -c:a copy "cropped_$file" && rm "$file" && mv "cropped_$file" "$file"
+fi
+
 # If running script under WSL (Windows), automatically open explorer in current directory
 if $(uname -a | grep -q 'microsoft')
 then
    explorer.exe .
 fi
+
