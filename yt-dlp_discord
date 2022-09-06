@@ -82,7 +82,6 @@ fi
 # If video duration is not available (Instagram Reels), get video length from ffprobe instead
 if [[ "$duration" = "NA" ]]
 then
-   file=$(find .tmp -type f -name "*" -execdir sh -c 'printf "%s\n" "${0%.}"' {} ';')
    duration=$(ffmpeg -i ".tmp/$file" 2>&1 | grep Duration | awk '{print $2}' | tr -d , | awk -F: '{ print ($1 * 3600) + ($2 * 60) + ($3)}')
    duration_round_up=$((${duration%.*} + 1))
 fi
