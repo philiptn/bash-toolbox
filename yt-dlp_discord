@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Text color definitions
+BLUE="\e[34m"
+GREEN="\e[32m"
+RED="\e[31m"
+YELLOW="\e[1;33m"
+ENDCOL="\e[0m"
+
 max_res="res:480" # 480p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=96 # 128kbps target audio bitrate
@@ -53,7 +60,7 @@ video_bitrate=$(($total_bitrate - $audio_bitrate))
 # If calculated video bitrate is less than 1kbps, throw error
 if [[ ! $video_bitrate -gt 1000 ]]
 then
-   echo "ERROR: Video is too long to be compressed."
+   echo -e "${RED}ERROR:${ENDCOL} Video is too long to be compressed."
    exit 1
 fi
 
@@ -82,7 +89,7 @@ file_no_ext=$(find .tmp -type f | cut -d "/" -f 2 | cut -d "." -f 1)
 
 if [[ "$crop" = "1" ]]
 then
-   echo "[FFmpeg] Auto-cropping enabled."
+   echo -e "[FFmpeg] ${YELLOW}Auto-cropping enabled.${ENDCOL}"
    # Detect black bars
    cropvalue_bb_initial=$(ffmpeg -i ".tmp/$file" -t 1 -vf "cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    cropvalue_bb_seek=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf "cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
@@ -140,23 +147,8 @@ fi
 # If calculated video bitrate is less than 1kbps, throw error
 if [[ ! $video_bitrate -gt 1000 ]]
 then
-   echo "ERROR: Video is too long to be compressed."
+   echo -e "${RED}ERROR:${ENDCOL} Video is too long to be compressed." 
    exit 1
-fi
-
-# Print debug info if verbose is enabled
-if [[ "$verbose" = "--verbose" ]]
-then
-   echo -e "\nDuration (s): $duration"
-   echo "Target size (bits): $target_size"
-   echo "Duration round-up (s) $duration_round_up"
-   echo "Total bitrate (bits): $total_bitrate"
-   echo "Audio bitrate (bits): $audio_bitrate"
-   echo "Video bitrate (bits): $video_bitrate"
-   echo "Cropvalue black bars initial: $cropvalue_bb_initial"
-   echo "Cropvalue black bars seek: $cropvalue_bb_seek"
-   echo "Cropvalue white bars initial: $cropvalue_wb_initial"
-   echo -e "Cropvalue white bars seek: $cropvalue_wb_seek\n"
 fi
 
 ##############
@@ -167,6 +159,28 @@ if [[ "$ffmpeg_enable" = "1" ]]
 then
    echo "[FFmpeg] Converting video..."
    ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" && rm ".tmp/$file" && rm -rf .tmp
+fi
+
+# Print debug info if verbose is enabled
+if [[ "$verbose" = "--verbose" ]]
+then
+   echo "+------------+"
+   echo -e "| ${YELLOW}DEBUG INFO${ENDCOL} |"
+   echo "+------------+"
+   echo -e "${YELLOW}Duration (s):${ENDCOL} $duration"
+   echo -e "${YELLOW}Target size (bits):${ENDCOL} $target_size"
+   echo -e "${YELLOW}Duration round-up (s):${ENDCOL} $duration_round_up"
+   echo -e "${YELLOW}Total bitrate (bits):${ENDCOL} $total_bitrate"
+   echo -e "${YELLOW}Audio bitrate (bits):${ENDCOL} $audio_bitrate"
+   echo -e "${YELLOW}Video bitrate (bits):${ENDCOL} $video_bitrate"
+   echo -e "${YELLOW}Cropvalue black bars initial:${ENDCOL} $cropvalue_bb_initial"
+   echo -e "${YELLOW}Cropvalue black bars seek:${ENDCOL} $cropvalue_bb_seek"
+   echo -e "${YELLOW}Cropvalue white bars initial:${ENDCOL} $cropvalue_wb_initial"
+   echo -e "${YELLOW}Cropvalue white bars seek:${ENDCOL} $cropvalue_wb_seek"
+   echo -e "${YELLOW}Cropvalue (FINAL):${ENDCOL} $cropvalue"
+   echo -e "${YELLOW}yt-dlp parameters (audio only):${ENDCOL} $alt_params"
+   echo -e "${YELLOW}yt-dlp parameters (FINAL):${ENDCOL} $yt_dlp_params"
+   echo -e "${YELLOW}FFmpeg arguments:${ENDCOL} $postprocessor_args_str"
 fi
 
 # If running script under WSL (Windows), automatically open explorer in current directory
