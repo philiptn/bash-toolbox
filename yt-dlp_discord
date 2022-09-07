@@ -83,11 +83,23 @@ file_no_ext=$(find .tmp -type f | cut -d "/" -f 2 | cut -d "." -f 1)
 if [[ "$crop" = "1" ]]
 then
    echo "[FFmpeg] Auto-cropping enabled."
-   cropvalue=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   
-   if [[ "$cropvalue" = "" ]]
+   # Detect black bars
+   cropvalue_bb_initial=$(ffmpeg -i ".tmp/$file" -t 1 -vf "cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_bb_seek=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf "cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+  
+   # Detect white bars
+   cropvalue_wb_initial=$(ffmpeg -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_wb_seek=$(ffmpeg -ss 5 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=20:2:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+  
+   # If the calculated crop-value is identical from the start of the video and 5 seconds in, apply crop value.
+   if [[ "$cropvalue_bb_initial" = "$cropvalue_bb_seek" ]]
    then
-      cropvalue=$(ffmpeg -i ".tmp/$file" -t 1 -vf cropdetect -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+      cropvalue=$cropvalue_bb_seek
+   fi
+   
+   if [[ "$cropvalue_wb_initial" = "$cropvalue_wb_seek" ]]
+   then
+      cropvalue=$cropvalue_wb_seek
    fi
 fi
 
@@ -134,12 +146,16 @@ fi
 # Print debug info if verbose is enabled
 if [[ "$verbose" = "--verbose" ]]
 then
-   echo "Duration (s): $duration"
+   echo -e "\nDuration (s): $duration"
    echo "Target size (bits): $target_size"
    echo "Duration round-up (s) $duration_round_up"
    echo "Total bitrate (bits): $total_bitrate"
    echo "Audio bitrate (bits): $audio_bitrate"
    echo "Video bitrate (bits): $video_bitrate"
+   echo "Cropvalue black bars initial: $cropvalue_bb_initial"
+   echo "Cropvalue black bars seek: $cropvalue_bb_seek"
+   echo "Cropvalue white bars initial: $cropvalue_wb_initial"
+   echo -e "Cropvalue white bars seek: $cropvalue_wb_seek\n"
 fi
 
 ##############
