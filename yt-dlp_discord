@@ -106,6 +106,7 @@ fi
 if [[ "$audio_only" = "1" ]]
 then
    mv ".tmp/$file" "./$file"
+   rm -rf .tmp
 fi
 
 # If video duration is not available (Instagram Reels), get video length from ffprobe instead
