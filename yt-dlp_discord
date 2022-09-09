@@ -36,10 +36,10 @@ do
                ;;
             a) audio_only=1
                ;;
-	    v) verbose="--verbose"
+            v) verbose="--verbose"
                ffmpeg_loglevel="-loglevel info"
                ;;
-	    c) crop=1
+            c) crop=1
                ;;
         esac
     else
@@ -111,9 +111,9 @@ then
          cropvalue=$cropvalue_bb_initial
       fi
 
-      # If the inverted crop-value detection is not base resolution, apply crop based on white borders instead.
       if [[ "$cropvalue_wb_initial" = "$cropvalue_wb_seek" ]]
       then
+         # If the inverted crop-value detection is not base resolution, apply crop based on white borders instead.
          if [[ "$cropvalue_wb_initial" !=  "$baseres" ]]
          then
             cropvalue=$cropvalue_wb_initial
@@ -128,7 +128,7 @@ then
    rm -rf .tmp
 fi
 
-# If video duration is not available (Instagram Reels), get video length from ffprobe instead
+# If video duration is not available (Instagram Reels), get video length from ffmpeg instead
 if [[ "$duration" = "NA" ]]
 then
    duration=$(ffmpeg -i ".tmp/$file" 2>&1 | grep Duration | awk '{print $2}' | tr -d , | awk -F: '{ print ($1 * 3600) + ($2 * 60) + ($3)}')
