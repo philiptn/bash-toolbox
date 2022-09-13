@@ -17,7 +17,59 @@ cropdetect_params_bb="20:16:0"
 cropdetect_params_wb="3:16:0"
 verbose="--no-warnings"
 ffmpeg_enable=1
-ffmpeg_loglevel="-loglevel quiet -stats"
+ffmpeg_loglevel="-loglevel quiet"
+cursor="spinner"
+
+# Thanks to 'Jonas Eberle' (Feb 3, 2020) for spinning cursor example
+# https://unix.stackexchange.com/a/565551
+
+function shutdown() {
+  tput cnorm # reset cursor
+}
+trap shutdown EXIT
+
+function cursorBack() {
+  echo -en "\033[$1D"
+}
+
+function spinner() {
+  # make sure we use non-unicode character type locale
+  # (that way it works for any locale as long as the font supports the characters)
+  local LC_CTYPE=C
+
+  local pid=$1 # Process Id of the previous running command
+
+  case 1 in
+  1)
+    local spin='-\|/'
+    local charwidth=1
+    ;;
+  11)
+    local spin='⣾⣽⣻⢿⡿⣟⣯⣷'
+    local charwidth=3
+    ;;
+  esac
+
+  local i=0
+  tput civis # cursor invisible
+  while kill -0 $pid 2>/dev/null; do
+    local i=$(((i + $charwidth) % ${#spin}))
+    printf "%s" "${spin:$i:$charwidth}"
+
+    cursorBack 1
+    sleep .1
+  done
+  printf "Done.\n"
+  tput cnorm
+  wait $pid # capture exit code
+  return $?
+}
+
+function nothing() {
+  local pid=$1
+  wait $pid
+  return $?
+}
 
 # Delete .tmp folder in case any previous downloads failed
 rm -rf .tmp
@@ -38,6 +90,7 @@ do
                ;;
             v) verbose="--verbose"
                ffmpeg_loglevel="-loglevel info"
+	       cursor="nothing"
                ;;
             c) crop=1
                ;;
@@ -169,9 +222,10 @@ fi
 
 if [[ "$ffmpeg_enable" = "1" ]]
 then
-   echo "[FFmpeg] Converting video..."
-   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" && rm ".tmp/$file" && rm -rf .tmp
-   echo -e "[FFmpeg] File saved as: '${YELLOW}$file_no_ext.mp4${ENDCOL}'"
+   printf "[FFmpeg] Converting video... "
+   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" & $cursor $!
+   rm ".tmp/$file" && rm -rf .tmp
+   printf "[FFmpeg] File saved as: '${YELLOW}$file_no_ext.mp4${ENDCOL}'\n"
 fi
 
 # Print debug info if verbose is enabled
