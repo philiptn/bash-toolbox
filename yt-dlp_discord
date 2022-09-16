@@ -44,8 +44,12 @@ function spinner() {
     local spin='-\|/'
     local charwidth=1
     ;;
-  11)
-    local spin='⣾⣽⣻⢿⡿⣟⣯⣷'
+  2)
+    local spin='․‥…‥․'
+    local charwidth=3
+    ;;
+  3)
+    local spin='⣷⣯⣟⡿⢿⣻⣽⣾'
     local charwidth=3
     ;;
   esac
