@@ -13,8 +13,9 @@ target_audio_bitrate=96 # 128kbps target audio bitrate
 audio_only=0
 crop=0
 cropvalue="crop=iw:ih:(in_w-out_w)/2:(in_h-out_h)/2"
-cropdetect_params_bb="20:16:0"
-cropdetect_params_wb="3:16:0"
+cropdetect_params_bb="20:2:0"
+cropdetect_params_wb="3:2:0"
+
 verbose="--no-warnings"
 ffmpeg_enable=1
 ffmpeg_loglevel="-loglevel quiet"
