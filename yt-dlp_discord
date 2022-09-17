@@ -217,10 +217,9 @@ then
 	 fi
       fi
    fi
+   # Revert IFS to standard
+   IFS="$old_IFS"
 fi
-
-# Revert IFS to standard
-IFS=$old_IFS
 
 if [[ "$audio_only" = "1" ]]
 then
@@ -270,7 +269,7 @@ fi
 if [[ "$ffmpeg_enable" = "1" ]]
 then
    printf "[FFmpeg] Converting video... "
-   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" & $cursor $!
+   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" -y & $cursor $!
    rm ".tmp/$file" && rm -rf .tmp
    printf "[FFmpeg] File saved as: '${YELLOW}$file_no_ext.mp4${ENDCOL}'\n"
 fi
