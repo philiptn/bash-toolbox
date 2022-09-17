@@ -15,6 +15,8 @@ crop=0
 cropvalue="crop=iw:ih:(in_w-out_w)/2:(in_h-out_h)/2"
 cropdetect_params_bb="20:2:0"
 cropdetect_params_wb="3:2:0"
+height_buffer=28 # Height buffer after cropping (pixels)
+width_buffer=28 # Width buffer after cropping (pixels)
 
 verbose="--no-warnings"
 ffmpeg_enable=1
@@ -151,22 +153,48 @@ if [[ "$crop" = "1" ]]
 then
    echo "[FFmpeg] Auto-cropping enabled."
    
+   # Temporarly change IFS (Internal Field Separator) to ":" instead of " ".
+   old_IFS="$IFS"
+   IFS=":"
+   
    baseres=$(ffmpeg -i ".tmp/$file" -t 1 -vf "cropdetect=0:0:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    # Detect black bars
    cropvalue_bb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_bb_seek=$(ffmpeg -ss 6 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-  
+   cropvalue_bb_seek=$(ffmpeg -ss 4 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   
+   width_bb_init=$(echo $cropvalue_bb_initial | cut -d "=" -f 2 | awk '{print $1}')
+   height_bb_init=$(echo $cropvalue_bb_initial | cut -d ":" -f 1 | awk '{print $2}')
+   x_bb_init=$(echo $cropvalue_bb_initial | cut -d ":" -f 1 | awk '{print $3}')
+   y_bb_init=$(echo $cropvalue_bb_initial | cut -d ":" -f 1 | awk '{print $4}')
+   
+   width_bb=$(($width_bb_init + $width_buffer * 2))
+   height_bb=$(($height_bb_init + $height_buffer * 2))
+   x_bb=$((x_bb_init - $width_buffer))
+   y_bb=$((y_bb_init - $height_buffer))
+
    # Detect white bars
    cropvalue_wb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_wb_seek=$(ffmpeg -ss 6 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-  
+   cropvalue_wb_seek=$(ffmpeg -ss 4 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   
+   width_wb_init=$(echo $cropvalue_wb_initial | cut -d "=" -f 2 | awk '{print $1}')
+   height_wb_init=$(echo $cropvalue_wb_initial | cut -d ":" -f 1 | awk '{print $2}')
+   x_wb_init=$(echo $cropvalue_wb_initial | cut -d ":" -f 1 | awk '{print $3}')
+   y_wb_init=$(echo $cropvalue_wb_initial | cut -d ":" -f 1 | awk '{print $4}')
+   
+   width_wb=$(($width_wb_init + $width_buffer * 2))
+   height_wb=$(($height_wb_init + $height_buffer * 2))
+   x_wb=$((x_wb_init - $width_buffer))
+   y_wb=$((y_wb_init - $height_buffer))
+
    # If calculated crop-value is identical value both from the start and 6 seconds in, and the values are different from base resolution
    if [[ "$cropvalue_bb_initial" = "$cropvalue_bb_seek" ]]
    then
       if [[ "$cropvalue_bb_initial" != "$baseres" ]]
       then
-         cropvalue=$cropvalue_bb_initial
+         if [[ ! $x_bb -gt 0 ]]; then width_buffer=0; width_bb=$width_bb_init; x_bb=$x_bb_init; fi
+         if [[ ! $y_bb -gt 0 ]]; then height_buffer=0; height_bb=$height_bb_init; y_bb=$y_bb_init; fi
+	 cropvalue="crop=$width_bb:$height_bb:$x_bb:$y_bb"
       fi
 
       if [[ "$cropvalue_wb_initial" = "$cropvalue_wb_seek" ]]
@@ -174,11 +202,25 @@ then
          # If the inverted crop-value detection is not base resolution, apply crop based on white borders instead.
          if [[ "$cropvalue_wb_initial" !=  "$baseres" ]]
          then
-            cropvalue=$cropvalue_wb_initial
+            if [[ ! $x_wb -gt 0 ]]; then width_buffer=0; width_wb=$(($width_wb_init)); x_wb=$x_wb_init; fi
+            if [[ ! $y_wb -gt 0 ]]; then height_buffer=0; height_wb=$(($height_wb_init)); y_wb=$y_wb_init; fi
+	   
+	    if [[ ! $height_bb_init < $height_wb_init ]]
+            then
+	       cropvalue="crop=$width_wb:$height_wb:$x_wb:$y_wb"
+	    fi
+
+	    if [[ "$cropvalue_bb_initial" = "$baseres" ]]
+            then
+	       cropvalue="crop=$width_wb:$height_wb:$x_wb:$y_wb"
+	    fi
 	 fi
       fi
    fi
 fi
+
+# Revert IFS to standard
+IFS=$old_IFS
 
 if [[ "$audio_only" = "1" ]]
 then
