@@ -140,7 +140,7 @@ fi
 ################
 
 mkdir .tmp
-yt-dlp ${verbose} ${yt_dlp_params} --output '.tmp/%(title)s.%(ext)s' ${script_args[@]}
+yt-dlp ${verbose} ${yt_dlp_params} --output '.tmp/%(id)s.%(ext)s' ${script_args[@]}
 
 ####################
 ### CALCULATIONS ###
