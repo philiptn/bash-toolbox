@@ -15,7 +15,7 @@ crop=0
 cropvalue="crop=iw:ih:(in_w-out_w)/2:(in_h-out_h)/2"
 cropdetect_params_bb="20:2:0"
 cropdetect_params_wb="3:2:0"
-height_buffer=28 # Height buffer after cropping (pixels)
+height_buffer=22 # Height buffer after cropping (pixels)
 width_buffer=28 # Width buffer after cropping (pixels)
 
 verbose="--no-warnings"
@@ -161,7 +161,7 @@ then
    
    # Detect black bars
    cropvalue_bb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_bb_seek=$(ffmpeg -ss 4 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_bb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    width_bb_init=$(echo $cropvalue_bb_initial | cut -d "=" -f 2 | awk '{print $1}')
    height_bb_init=$(echo $cropvalue_bb_initial | cut -d ":" -f 1 | awk '{print $2}')
@@ -171,11 +171,11 @@ then
    width_bb=$(($width_bb_init + $width_buffer * 2))
    height_bb=$(($height_bb_init + $height_buffer * 2))
    x_bb=$((x_bb_init - $width_buffer))
-   y_bb=$((y_bb_init - $height_buffer))
+   y_bb=$((y_bb_init - ($height_buffer * 2) - 2))
 
    # Detect white bars
    cropvalue_wb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_wb_seek=$(ffmpeg -ss 4 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_wb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    width_wb_init=$(echo $cropvalue_wb_initial | cut -d "=" -f 2 | awk '{print $1}')
    height_wb_init=$(echo $cropvalue_wb_initial | cut -d ":" -f 1 | awk '{print $2}')
@@ -187,7 +187,7 @@ then
    x_wb=$((x_wb_init - $width_buffer))
    y_wb=$((y_wb_init - $height_buffer))
 
-   # If calculated crop-value is identical value both from the start and 6 seconds in, and the values are different from base resolution
+   # If calculated crop-value is identical value both from the start and a few seconds in, and the values are different from base resolution
    if [[ "$cropvalue_bb_initial" = "$cropvalue_bb_seek" ]]
    then
       if [[ "$cropvalue_bb_initial" != "$baseres" ]]
