@@ -4,7 +4,7 @@ A collection of handy bash scripts that I use from time to time.
 ### Linux
 If yt-dlp is not currently installed it can be installed with:
 ```bash
-python3 -m pip install -U yt-dlp
+sudo snap install yt-dlp
 ```
 FFmpeg is required for yt-dlp to work properly and can be installed using:
 ```bash
