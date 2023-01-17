@@ -90,7 +90,7 @@ do
     then
         case $option
         in
-            n) target_size_mb=38  # 40MB target size, but 2MB headroom
+            n) target_size_mb=45  # 50MB target size, but 3MB headroom
                target_audio_bitrate=256 # 256kbps target audio bitrate
                ;;
             a) audio_only=1
@@ -171,7 +171,7 @@ then
    width_bb=$(($width_bb_init + $width_buffer * 2))
    height_bb=$(($height_bb_init + $height_buffer * 2))
    x_bb=$((x_bb_init - $width_buffer))
-   y_bb=$((y_bb_init - ($height_buffer * 2) - 2))
+   y_bb=$((y_bb_init - $height_buffer))
 
    # Detect white bars
    cropvalue_wb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
