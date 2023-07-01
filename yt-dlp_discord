@@ -84,32 +84,34 @@ rm -rf .tmp
 # Thanks to 'Chris Pearson' (Aug 15, 2020) for getopts example
 # https://stackoverflow.com/a/40190976
 
-while [ $OPTIND -le "$#" ]
-do
-    if getopts navc option
-    then
-        case $option
-        in
-            n) target_size_mb=45  # 50MB target size, but 3MB headroom
-               target_audio_bitrate=256 # 256kbps target audio bitrate
-               ;;
-            a) audio_only=1
-               ;;
-            v) verbose="--verbose"
-               ffmpeg_loglevel="-loglevel info"
-	       cursor="nothing"
-               ;;
-            c) crop=1
-               ;;
-        esac
-    else
-        script_args+=("${!OPTIND}")
-        ((OPTIND++))
-    fi
+while getopts ":navcp:" option; do
+    case $option in
+        n)  target_size_mb=45  # 50MB target size, but 3MB headroom
+            target_audio_bitrate=256 # 256kbps target audio bitrate
+            ;;
+        a)  audio_only=1
+            ;;
+        v)  verbose="--verbose"
+            ffmpeg_loglevel="-loglevel info"
+            cursor="nothing"
+            ;;
+        c)  crop=1
+            ;;
+        p)  ytdlp_opts=${OPTARG}
+            ;;
+        \?) echo "Invalid option -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
 done
+
+shift $((OPTIND -1))
+
+script_args=("$@")
 
 # Thanks to 'tobek' (Jul 14, 2020) for duration and bitrate calculation examples
 # https://unix.stackexchange.com/a/598360
+
 
 target_size=$(($target_size_mb * 1000 * 1000 * 8)) # target size in bits
 duration=$(yt-dlp --no-warnings --print duration ${script_args[@]})
@@ -140,7 +142,7 @@ fi
 ################
 
 mkdir .tmp
-yt-dlp ${verbose} ${yt_dlp_params} --output '.tmp/%(id)s.%(ext)s' ${script_args[@]}
+yt-dlp ${verbose} ${yt_dlp_params} ${ytdlp_opts} --output '.tmp/%(id)s.%(ext)s' ${script_args[@]} || rmdir .tmp && exit 1
 
 ####################
 ### CALCULATIONS ###
@@ -269,7 +271,7 @@ fi
 if [[ "$ffmpeg_enable" = "1" ]]
 then
    printf "[FFmpeg] Converting video... "
-   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" -y & $cursor $!
+   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" -y & $cursor $! || exit 1
    rm ".tmp/$file" && rm -rf .tmp
    printf "[FFmpeg] File saved as: '${YELLOW}$file_no_ext.mp4${ENDCOL}'\n"
 fi
