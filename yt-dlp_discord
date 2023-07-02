@@ -142,7 +142,7 @@ fi
 ################
 
 mkdir .tmp
-yt-dlp ${verbose} ${yt_dlp_params} ${ytdlp_opts} --output '.tmp/%(id)s.%(ext)s' ${script_args[@]} || rmdir .tmp && exit 1
+yt-dlp ${verbose} ${ytdlp_opts} ${yt_dlp_params} --output '.tmp/%(id)s.%(ext)s' ${script_args[@]} || exit 1
 
 ####################
 ### CALCULATIONS ###
