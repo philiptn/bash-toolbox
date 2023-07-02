@@ -114,7 +114,7 @@ script_args=("$@")
 
 
 target_size=$(($target_size_mb * 1000 * 1000 * 8)) # target size in bits
-duration=$(yt-dlp --no-warnings --print duration ${script_args[@]})
+duration=$(yt-dlp ${ytdlp_opts} --no-warnings --print duration ${script_args[@]})
 duration_round_up=$((${duration%.*} + 1))
 
 total_bitrate=$(($target_size / $duration_round_up))
