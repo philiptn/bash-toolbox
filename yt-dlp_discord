@@ -7,7 +7,7 @@ RED="\e[31m"
 YELLOW="\e[1;33m"
 ENDCOL="\e[0m"
 
-max_res="res:480" # 480p max resolution
+max_res="res:720" # 720p max resolution
 target_size_mb=7 # 8MB target size, but 1MB headroom
 target_audio_bitrate=96 # 128kbps target audio bitrate
 audio_only=0
@@ -162,8 +162,8 @@ then
    baseres=$(ffmpeg -i ".tmp/$file" -t 1 -vf "cropdetect=0:0:0" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    # Detect black bars
-   cropvalue_bb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_bb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_bb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "eq=contrast=1.0, cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_bb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "eq=contrast=1.0, cropdetect=${cropdetect_params_bb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    width_bb_init=$(echo $cropvalue_bb_initial | cut -d "=" -f 2 | awk '{print $1}')
    height_bb_init=$(echo $cropvalue_bb_initial | cut -d ":" -f 1 | awk '{print $2}')
@@ -176,8 +176,8 @@ then
    y_bb=$((y_bb_init - $height_buffer))
 
    # Detect white bars
-   cropvalue_wb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
-   cropvalue_wb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_wb_initial=$(ffmpeg -ss 1 -i ".tmp/$file" -t 1 -vf "eq=contrast=1.0, lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
+   cropvalue_wb_seek=$(ffmpeg -ss 2 -i ".tmp/$file" -t 1 -vf "eq=contrast=1.0, lutrgb=r=negval:g=negval:b=negval, cropdetect=${cropdetect_params_wb}" -f null - 2>&1 | awk '/crop/ { print $NF }' | tail -1)
    
    width_wb_init=$(echo $cropvalue_wb_initial | cut -d "=" -f 2 | awk '{print $1}')
    height_wb_init=$(echo $cropvalue_wb_initial | cut -d ":" -f 1 | awk '{print $2}')
@@ -189,36 +189,26 @@ then
    x_wb=$((x_wb_init - $width_buffer))
    y_wb=$((y_wb_init - $height_buffer))
 
-   # If calculated crop-value is identical value both from the start and a few seconds in, and the values are different from base resolution
-   if [[ "$cropvalue_bb_initial" = "$cropvalue_bb_seek" ]]
+   if [[ "$cropvalue_bb_initial" != "$baseres" ]]
    then
-      if [[ "$cropvalue_bb_initial" != "$baseres" ]]
-      then
-         if [[ ! $x_bb -gt 0 ]]; then width_buffer=0; width_bb=$width_bb_init; x_bb=$x_bb_init; fi
-         if [[ ! $y_bb -gt 0 ]]; then height_buffer=0; height_bb=$height_bb_init; y_bb=$y_bb_init; fi
-	 cropvalue="crop=$width_bb:$height_bb:$x_bb:$y_bb"
-      fi
+     if [[ ! $x_bb -gt 0 ]]; then width_buffer=0; width_bb=$width_bb_init; x_bb=$x_bb_init; fi
+     if [[ ! $y_bb -gt 0 ]]; then height_buffer=0; height_bb=$height_bb_init; y_bb=$y_bb_init; fi
+     cropvalue="crop=$width_bb:$height_bb:$x_bb:$y_bb"
 
-      if [[ "$cropvalue_wb_initial" = "$cropvalue_wb_seek" ]]
-      then
-         # If the inverted crop-value detection is not base resolution, apply crop based on white borders instead.
-         if [[ "$cropvalue_wb_initial" !=  "$baseres" ]]
-         then
-            if [[ ! $x_wb -gt 0 ]]; then width_buffer=0; width_wb=$(($width_wb_init)); x_wb=$x_wb_init; fi
-            if [[ ! $y_wb -gt 0 ]]; then height_buffer=0; height_wb=$(($height_wb_init)); y_wb=$y_wb_init; fi
-	   
-	    if [[ ! $height_bb_init < $height_wb_init ]]
-            then
-	       cropvalue="crop=$width_wb:$height_wb:$x_wb:$y_wb"
-	    fi
+     if [[ "$cropvalue_wb_initial" != "$cropvalue_bb_initial" ]]
+     then
+       if [[ "$cropvalue_wb_initial" != "$baseres" ]]
+       then
+         if [[ ! $x_wb -gt 0 ]]; then width_buffer=0; width_wb=$(($width_wb_init)); x_wb=$x_wb_init; fi
+         if [[ ! $y_wb -gt 0 ]]; then height_buffer=0; height_wb=$(($height_wb_init)); y_wb=$y_wb_init; fi
+       fi
+     fi
 
-	    if [[ "$cropvalue_bb_initial" = "$baseres" ]]
-            then
-	       cropvalue="crop=$width_wb:$height_wb:$x_wb:$y_wb"
-	    fi
+    if [[ "$cropvalue_wb_initial" < "$baseres" ]]
+    then
+      cropvalue="crop=$width_wb:$height_wb:$x_wb:$y_wb"
+    fi
 	 fi
-      fi
-   fi
    # Revert IFS to standard
    IFS="$old_IFS"
 fi
@@ -271,7 +261,7 @@ fi
 if [[ "$ffmpeg_enable" = "1" ]]
 then
    printf "[FFmpeg] Converting video... "
-   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" $postprocessor_args_str "$file_no_ext.mp4" -y & $cursor $! || exit 1
+   ffmpeg $ffmpeg_loglevel -i ".tmp/$file" -vcodec libx264 -tune grain -preset medium -bf 4 -rc-lookahead 32 -aq-mode 3 -b-pyramid normal -coder 1 $postprocessor_args_str -filter_complex "[0:a]compand=attacks=0:decays=0.3:soft-knee=6:points=-110.00/-110.00|-100.00/-105.00|-88.88/-98.04|-80.00/-90.00|-75.00/-85.00|-63.89/-68.04|-51.56/-51.73|-42.14/-39.32|-34.35/-27.25|-31.43/-22.64|-27.54/-18.38|-24.29/-15.90|-20.07/-13.77|-13.58/-10.18|-5.15/-8.04|2.64/-6.96|10.76/-5.36|20.17/-4.29:gain=0,pan=stereo|FL=0.7*FL|FR=0.7*FR" "$file_no_ext.mp4" -y & $cursor $! || exit 1
    rm ".tmp/$file" && rm -rf .tmp
    printf "[FFmpeg] File saved as: '${YELLOW}$file_no_ext.mp4${ENDCOL}'\n"
 fi
@@ -298,10 +288,3 @@ then
    echo -e "${YELLOW}yt-dlp parameters (FINAL):${ENDCOL} $yt_dlp_params"
    echo -e "${YELLOW}FFmpeg arguments:${ENDCOL} $postprocessor_args_str"
 fi
-
-# If running script under WSL (Windows), automatically open explorer in current directory
-if $(uname -a | grep -q 'microsoft')
-then
-   explorer.exe .
-fi
-

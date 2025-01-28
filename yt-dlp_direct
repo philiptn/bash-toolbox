@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+yt-dlp --output-na-placeholder '' --playlist-reverse --output '%(playlist_autonumber,uploader)s - %(title)s.%(ext)s' "$1"
