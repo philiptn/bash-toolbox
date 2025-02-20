@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
 
-yt-dlp --output-na-placeholder '' --playlist-reverse --output '%(playlist_autonumber,uploader)s - %(title)s.%(ext)s' "$1"
+url="$1"
+
+if [[ "$url" == *"youtube.com"* ]] && [[ "$url" == *"/playlist"* ]]; then
+    flags=""
+else
+    flags="--playlist-reverse"
+fi
+
+yt-dlp --output-na-placeholder '' $flags -f 'bestvideo[vcodec!*=av01]+bestaudio/best' --output '%(playlist_autonumber,uploader)s - %(title)s.%(ext)s' "$url"
