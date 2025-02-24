@@ -2,10 +2,17 @@
 
 url="$1"
 
+# Check if running under WSL by looking for "microsoft" in /proc/version
+if grep -qi microsoft /proc/version; then
+    wsl_opts="--windows-filenames"
+else
+    wsl_opts=""
+fi
+
 if [[ "$url" == *"youtube.com"* ]] && [[ "$url" == *"/playlist"* ]]; then
     flags=""
 else
     flags="--playlist-reverse"
 fi
 
-yt-dlp --output-na-placeholder '' $flags -f 'bestvideo[vcodec!*=av01]+bestaudio/best' --output '%(playlist_autonumber,uploader)s - %(title)s.%(ext)s' "$url"
+yt-dlp --output-na-placeholder '' $flags $wsl_opts -f 'bestvideo[vcodec!*=av01]+bestaudio/best' --output '%(playlist_autonumber,uploader)s - %(title)s.%(ext)s' "$url"
